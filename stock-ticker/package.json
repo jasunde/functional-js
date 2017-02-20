@@ -1,0 +1,16 @@
+{
+  "name": "stock-ticker",
+  "version": "0.0.1",
+  "description": "Mock stock ticker using functional programming",
+  "main": "fp-helpers.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "jasunde",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-jasmine-browser": "^1.7.1",
+    "phantomjs": "^2.1.7"
+  }
+}
