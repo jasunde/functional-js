@@ -28,8 +28,10 @@ var evtEmitter = {
 
 var stocks = {
 	"AAPL": { price: 121.95, change: 0.01 },
-	"MSFT": { price: 65.78, change: 1.51 },
-	"GOOG": { price: 821.31, change: -8.84 },
+	"MSFT": { price: 121.95, change: 1.51 },
+	// "MSFT": { price: 65.78, change: 1.51 },
+	"GOOG": { price: 121.95, change: -8.84 },
+	// "GOOG": { price: 821.31, change: -8.84 },
 };
 
 setTimeout( function initialStocks(){

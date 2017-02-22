@@ -80,74 +80,97 @@ function getStockInfoChildElems(stockElem) {
   ( stockElem );
 }
 
+function addUpdateToStockHistories({id, change, price}, histories) {
+  var newHistories = Object.assign({}, histories);
+
+  var price = compose( parseFloat, stripPrefix(/\$/) )( price );
+
+  var priceObj = {
+    change: change,
+    price: price,
+    date: new Date()
+  };
+
+  if(newHistories.hasOwnProperty(id)) {
+    newHistories[id].push(priceObj);
+  } else {
+    newHistories[id] = [priceObj];
+  }
+  return newHistories;
+}
+
+
 var stockTickerUI = {
+  stockHistories: {},
 
-    updateStockElems(stockInfoChildElemList,data) {
-      var getDataVal = curry( reverseArgs( prop ), 2 )( data );
-      var extractInfoChildElemVal = pipe(
-        getClassName,
-        stripPrefix( /\bstock-/ ),
-        getDataVal
-      );
-      var orderedDataVals = map( extractInfoChildElemVal )( stockInfoChildElemList );
-      var elemsValsTuples = filterOut( function updateValueMissing([infoChildElem, val]) {
-        return val === undefined;
-      } )
-      ( zip( stockInfoChildElemList, orderedDataVals ) );
+  updateStockElems(stockInfoChildElemList,data) {
+    var getDataVal = curry( reverseArgs( prop ), 2 )( data );
+    var extractInfoChildElemVal = pipe(
+      getClassName,
+      stripPrefix( /\bstock-/ ),
+      getDataVal
+    );
+    var orderedDataVals = map( extractInfoChildElemVal )( stockInfoChildElemList );
+    var elemsValsTuples = filterOut( function updateValueMissing([infoChildElem, val]) {
+      return val === undefined;
+    } )
+    ( zip( stockInfoChildElemList, orderedDataVals ) );
 
-      // !!SIDE EFFECTS!!
-      compose( each, spreadArgs )
-      ( setDOMContent )
-      ( elemsValsTuples );
-    },
+    
+    // !!SIDE EFFECTS!!
+    compose( each, spreadArgs )
+    ( setDOMContent )
+    ( elemsValsTuples );
 
-    updateStock(tickerElem,data) {
-      var getStockElemFromId = curry( getStockElem )( tickerElem );
-      var stockInfoChildElemList = pipe(
-        getStockElemFromId,
-        getStockInfoChildElems
+    this.stockHistories = addUpdateToStockHistories(data, this.stockHistories);
+    drawStocks(this.stockHistories);
+  },
+
+  updateStock(tickerElem,data) {
+    var getStockElemFromId = curry( getStockElem )( tickerElem );
+    var stockInfoChildElemList = pipe(
+      getStockElemFromId,
+      getStockInfoChildElems
+    )
+    ( data.id );
+
+    return stockTickerUI.updateStockElems(
+      stockInfoChildElemList,
+      data
+    );
+  },
+
+  addStock(tickerElem,data) {
+    var [stockElem, ...infoChildElems] = map(
+      createElement
+    )
+    ( [ "li", "span", "span", "span" ] );
+    var attrValTuples = [
+      [ ["class","stock"], ["data-stock-id",data.id] ],
+      [ ["class","stock-name"] ],
+      [ ["class","stock-price"] ],
+      [ ["class","stock-change"] ]
+    ];
+    var elemsAttrsTuples =
+      zip( [stockElem, ...infoChildElems], attrValTuples );
+
+    // !!SIDE EFFECTS!!
+    each( function setElemAttrs([elem,attrValTupleList]){
+      each(
+        spreadArgs( partial( setElemAttr, elem ) )
       )
-      ( data.id );
+      ( attrValTupleList );
+    } )
+    ( elemsAttrsTuples );
 
-      return stockTickerUI.updateStockElems(
-        stockInfoChildElemList,
-        data
-      );
-    },
-
-    addStock(tickerElem,data) {
-      var [stockElem, ...infoChildElems] = map(
-        createElement
-      )
-      ( [ "li", "span", "span", "span" ] );
-      var attrValTuples = [
-        [ ["class","stock"], ["data-stock-id",data.id] ],
-        [ ["class","stock-name"] ],
-        [ ["class","stock-price"] ],
-        [ ["class","stock-change"] ]
-      ];
-      var elemsAttrsTuples =
-        zip( [stockElem, ...infoChildElems], attrValTuples );
-
-      // !!SIDE EFFECTS!!
-      each( function setElemAttrs([elem,attrValTupleList]){
-        each(
-          spreadArgs( partial( setElemAttr, elem ) )
-        )
-        ( attrValTupleList );
-      } )
-      ( elemsAttrsTuples );
-
-      // !!SIDE EFFECTS!!
-      stockTickerUI.updateStockElems( infoChildElems, data );
-      reduce( appendDOMChild )( stockElem )( infoChildElems );
-      console.log('stockElem', stockElem);
-      tickerElem.appendChild( stockElem );
-    }
+    // !!SIDE EFFECTS!!
+    stockTickerUI.updateStockElems( infoChildElems, data );
+    reduce( appendDOMChild )( stockElem )( infoChildElems );
+    tickerElem.appendChild( stockElem );
+  }
 };
 
 var ticker = document.getElementById( "stocks" );
-console.log('document', document);
 
 var stockTickerUIMethodsWithDOMContext = map(
     curry( reverseArgs( partial ), 2 )( ticker )
