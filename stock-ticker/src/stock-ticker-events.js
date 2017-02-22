@@ -1,14 +1,15 @@
+var server = connectToServer();
 
 var formatDecimal = unboundMethod( "toFixed")( 2 );
 var formatPrice = pipe( formatDecimal, formatCurrency );
 var formatChange = pipe( formatDecimal, formatSign );
 var processNewStock = pipe( addStockName, formatStockNumbers );
 
-var makeObservableFromEvent = curr( Rx.observable.fromEvent, 2 )( server );
+var makeObservableFromEvent = curry( Rx.Observable.fromEvent, 2 )( server );
 
 var observableMapperFns = [ processNewStock, formatStockNumbers ];
 
-var [ newStock, stockUpdates ] = pipe(
+var [ newStocks, stockUpdates ] = pipe(
   map( makeObservableFromEvent ),
   curry( zip )( observableMapperFns ),
   map( spreadArgs( transformObservable ) )
